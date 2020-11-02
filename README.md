@@ -20,7 +20,7 @@
 
 GAN的损失函数可表示为：
 
-![img](https://latex.codecogs.com/svg.latex?\underset{G}{\text{min}}%20\underset{D}{\text{max}}V(D,G)%20=%20\mathbb{E}_{x\sim%20p_{data}(x)}\big[logD(x)\big]%20+%20\mathbb{E}_{z\sim%20p_{z}(z)}\big[log(1-D(G(z))
+![img](https://latex.codecogs.com/svg.latex?\underset{G}{\text{min}}%20\underset{D}{\text{max}}V(D,G)%20=%20\mathbb{E}_{x\sim%20p_{data}(x)}\big[logD(x)\big]%20+%20\mathbb{E}_{z\sim%20p_{z}(z)}\big[log(1-D(G(z)))\big])
 
 从理论上讲，此minimax游戏的解决方案是![img](https://latex.codecogs.com/svg.latex?p_g%20=%20p_{data})，鉴别者会盲目猜测输入是真实的还是假的。但是，GAN的收敛理论仍在积极研究中，实际上GAN常常会遇到梯度消失/爆炸问题。  
 生成对抗网络常用于生成以假乱真的图片。此外，该方法还被用于生成视频、三维物体模型等。
