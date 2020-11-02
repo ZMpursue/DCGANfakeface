@@ -118,7 +118,7 @@ bn_initializer=paddle.nn.initializer.Normal(mean=1.0, std=0.02)
 
 训练过程中的每一次迭代，生成器和判别器分别设置自己的迭代次数。为了避免判别器快速收敛到0，本教程默认每迭代一次，训练一次判别器，两次生成器。
 ## 5 模型评估
-### 生成器G和判别器D的损失与迭代变化图
+### 生成器$G$和判别器$D$的损失与迭代变化图
 ![](https://ai-studio-static-online.cdn.bcebos.com/8c94b567738c423ba5a421a40ccf5f57fd8defc3b62d46f28cc5d3aa3439bf42)
 
 ### 对比真实人脸图像（图一）和生成人脸图像（图二）
