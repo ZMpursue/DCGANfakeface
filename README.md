@@ -77,7 +77,7 @@ bn_initializer=paddle.nn.initializer.Normal(mean=1.0, std=0.02)
 ```
 
 ### 3.4 定义网络功能模块(./network.py)
-包括卷积层、转置卷积层、$BatchNorm$层、全连接层和卷积BatchNorm组 
+包括卷积层、转置卷积层、BatchNorm层、全连接层和卷积BatchNorm组 
 * 转置卷积层：在生成器中，需要用随机采样值生成全尺寸图像，dcgan使用转置卷积层进行上采样，在Fluid中，调用 fluid.layers.conv2d_transpose 实现转置卷积。
 * BatchNorm层：调用 fluid.layers.batch_norm 接口实现bn层，激活函数默认使用ReLu。
 * 卷积层：调用 fluid.nets.simple_img_conv_pool 实现卷积池化组，卷积核大小为5x5，池化窗口大小为2x2，窗口滑动步长为2，激活函数类型由具体网络结构指定。
@@ -103,7 +103,7 @@ bn_initializer=paddle.nn.initializer.Normal(mean=1.0, std=0.02)
 > 输出:3x128x128RGB三通道图片
 
 ### 3.7 损失函数(./network.py)
-选用Softmax_with_cross_entropy,公式如下:
+选用BCELoss,公式如下:
 
 ![img](https://latex.codecogs.com/svg.latex?Out%20=%20-1%20*%20(label%20*%20log(input)%20+%20(1%20-%20label)%20*%20log(1%20-%20input)))
 
@@ -132,7 +132,7 @@ bn_initializer=paddle.nn.initializer.Normal(mean=1.0, std=0.02)
 ### 输入随机数让生成器G生成随机人脸
 
 ## 8 项目总结
-简单介绍了一下DCGAN的原理，通过对原项目的改进和优化，一步一步依次对生成器和判别器以及训练过程进行介绍。
+简单介绍了一下DCGAN的原理，一步一步依次对生成器和判别器以及训练过程进行介绍。
 DCGAN采用一个随机噪声向量作为输入，输入通过与CNN类似但是相反的结构，将输入放大成二维数据。采用这种结构的生成模型和CNN结构的判别模型，DCGAN在图片生成上可以达到相当可观的效果。本案例中，我们利用DCGAN生成了人脸照片，您可以尝试更换数据集生成符合个人需求的图片，或尝试修改网络结构观察不一样的生成效果。
 
 ## 9 参考文献
