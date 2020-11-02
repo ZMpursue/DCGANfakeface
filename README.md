@@ -35,14 +35,6 @@ DCGAN是深层卷积网络与 GAN 的结合，其基本原理与 GAN 相同，�
  * 使用全卷积网络：去掉了FC层，以实现更深的网络结构。
  * 激活函数：在生成器（G）中，最后一层使用Tanh函数，其余层采用 ReLu 函数 ; 判别器（D）中都采用LeakyReLu。  
 
-  ### 1.3 本文的改进
-
-   * 将Adam优化器beta1参数设置为0.8，具体请参考[原论文](https://arxiv.org/abs/1412.6980)
-   * 将BatchNorm批归一化中momentum参数设置为0.5
-   * 将判别器(D)激活函数由elu改为leaky_relu，并将alpha参数设置为0.2
-   * 生成器输出，判别器输入改为[3,128,128]
-   * 损失函数选用Softmax_with_cross_entropy
----
 
 
 ## 2 环境设置及数据集
@@ -62,7 +54,7 @@ img_align_celeba目录结构应为：
 ```
 
 ### 2.3 数据集预处理(./pretreat.py)
-多线程处理，以裁切坐标(0,20)和(128,148)，将输入网络的图片裁切到128*128。
+多线程处理，以裁切坐标(0,10)和(64,74)，将输入网络的图片裁切到64*64。
 
 
 ## 3 模型组网
@@ -74,13 +66,14 @@ img_align_celeba目录结构应为：
 
 
 ### 3.3 权重初始化(./weightInit.py)
-在 DCGAN 论文中，作者指定所有模型权重应从均值为0、标准差为0.02的正态分布中随机初始化。  
-在Fluid中，调用fluid.initializer.NormalInitializer实现initialize设置
+在 DCGAN 论文中，作者指定所有模型权重应从均值为0、标准差为0.02的正态分布中随机初始化。
+在paddle.nn中，调用fluid.nn.initializer.Normal实现initialize设置
 
 
 ```python
-conv_initializer=fluid.initializer.NormalInitializer(loc=0.0, scale=0.02)
-bn_initializer=fluid.initializer.NormalInitializer(loc=1.0, scale=0.02)
+import paddle.fluid as fluid
+conv_initializer=paddle.nn.initializer.Normal(mean=0.0, std=0.02)
+bn_initializer=paddle.nn.initializer.Normal(mean=1.0, std=0.02)
 ```
 
 ### 3.4 定义网络功能模块(./network.py)
@@ -90,16 +83,16 @@ bn_initializer=fluid.initializer.NormalInitializer(loc=1.0, scale=0.02)
 * 卷积层：调用 fluid.nets.simple_img_conv_pool 实现卷积池化组，卷积核大小为5x5，池化窗口大小为2x2，窗口滑动步长为2，激活函数类型由具体网络结构指定。
 
 ### 3.5 判别器(./network.py)
-如上文所述，生成器D是一个二进制分类网络，它以图像作为输入，输出图像是真实的（相对应G生成的假样本）的概率。输入Shape为[3,128,128]的RGB图像，通过一系列的Conv2d，BatchNorm2d和LeakyReLU层对其进行处理，然后通过全连接层输出的神经元个数为2，对应两个标签的预测概率。
+如上文所述，生成器D是一个二进制分类网络，它以图像作为输入，输出图像是真实的（相对应G生成的假样本）的概率。输入Shape为[3,64,64]的RGB图像，通过一系列的Conv2d，BatchNorm2d和LeakyReLU层对其进行处理，然后通过全连接层输出的神经元个数为2，对应两个标签的预测概率。
 
 * 将BatchNorm批归一化中momentum参数设置为0.5
 * 将判别器(D)激活函数leaky_relu的alpha参数设置为0.2
 
-> 输入:  为大小128x128的RGB三通道图片  
+> 输入:  为大小64x64的RGB三通道图片  
 > 输出:  经过一层全连接层最后为shape为[batch_size,2]的Tensor
 
 ### 3.6 生成器(./network.py)
-生成器G旨在映射潜在空间矢量z到数据空间。由于我们的数据是图像，因此转换$z$到数据空间意味着最终创建具有与训练图像相同大小[3,128,128]的RGB图像。在网络设计中，这是通过一系列二维卷积转置层来完成的，每个层都与BatchNorm层和ReLu激活函数。生成器的输出通过tanh函数输出，以使其返回到输入数据范围[−1,1]。值得注意的是，在卷积转置层之后存在BatchNorm函数，因为这是DCGAN论文的关键改进。这些层有助于训练过程中的梯度更好地流动。  
+生成器G旨在映射潜在空间矢量z到数据空间。由于我们的数据是图像，因此转换$z$到数据空间意味着最终创建具有与训练图像相同大小[3,64,64]的RGB图像。在网络设计中，这是通过一系列二维卷积转置层来完成的，每个层都与BatchNorm层和ReLu激活函数。生成器的输出通过tanh函数输出，以使其返回到输入数据范围[−1,1]。值得注意的是，在卷积转置层之后存在BatchNorm函数，因为这是DCGAN论文的关键改进。这些层有助于训练过程中的梯度更好地流动。
 
 **生成器网络结构**  
 ![](https://ai-studio-static-online.cdn.bcebos.com/ca0434dd681849338b1c0c46285616f72add01ab894b4e95848daecd5a72e3cb)
@@ -112,19 +105,18 @@ bn_initializer=fluid.initializer.NormalInitializer(loc=1.0, scale=0.02)
 ### 3.7 损失函数(./network.py)
 选用Softmax_with_cross_entropy,公式如下:
 
-![img](https://latex.codecogs.com/svg.latex?loss_j%20=%20%20-\text{logits}_{label_j}%20+\log\left(\sum_{i=0}^{K}\exp(\text{logits}_i)\right),%20j%20=%201,...,%20K)
+![img](https://latex.codecogs.com/svg.latex?Out%20=%20-1%20*%20(label%20*%20log(input)%20+%20(1%20-%20label)%20*%20log(1%20-%20input)))
 
 ## 4 模型训练(./train.py)
  设置的超参数为：
  * 学习率：0.0002
- * 输入图片长和宽：128
+ * 输入图片长和宽：64
  * Epoch: 8
  * Mini-Batch：128
  * 输入Tensor长度：100
- * Adam：Beta1：0.5，Beta2：0.999  
+ * Adam：Beta1：0.5，Beta2：0.999
 
 训练过程中的每一次迭代，生成器和判别器分别设置自己的迭代次数。为了避免判别器快速收敛到0，本教程默认每迭代一次，训练一次判别器，两次生成器。
-
 ## 5 模型评估
 ### 生成器G和判别器D的损失与迭代变化图
 ![](https://ai-studio-static-online.cdn.bcebos.com/8c94b567738c423ba5a421a40ccf5f57fd8defc3b62d46f28cc5d3aa3439bf42)

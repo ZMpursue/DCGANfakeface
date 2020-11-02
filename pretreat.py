@@ -6,15 +6,15 @@ from PIL import ImageFile
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-'''多线程将图片缩放后再裁切到128*128分辨率'''
+'''多线程将图片缩放后再裁切到64*64分辨率'''
 # 裁切图片宽度
-w = 128
+w = 64
 # 裁切图片高度
-h = 128
+h = 64
 # 裁切点横坐标(以图片左上角为原点)
 x = 0
 # 裁切点纵坐标
-y = 20
+y = 10
 
 
 def cutArray(l, num):
@@ -61,8 +61,8 @@ class thread(threading.Thread):
 
 
 if __name__ == '__main__':
-    inpath = './work/img_align_celeba/'
-    outpath = './work/imgs/'
+    inpath = './img_align_celeba/'
+    outpath = './imgs/'
     if not os.path.exists(outpath):
         os.mkdir(outpath)
     files = os.listdir(inpath)
